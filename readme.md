@@ -154,3 +154,64 @@ Your task is to create a comprehensive Bruno collection that validates the entir
 
 ---
 *Good luck. Auntie Som is counting on you!* 🍜🔥
+
+
+### 🔍 Bugs Found
+
+1. **Incorrect totalPrice Calculation**
+   - Orders are created with an incorrect total price.
+   - The totalPrice returned by the API is always 5 less than the expected value.
+
+2. **Invalid Quantity Handling**
+   - The API allows creating orders with quantity = 0 or negative values.
+   - When a negative quantity is used, the system incorrectly increases the stock instead of decreasing it.
+
+3. **Inconsistent Stock Data**
+   - The API reports stock = 0 in `/menu`, but the actual stock in the database is greater than 0.
+   - This indicates a mismatch between displayed data and actual data.
+
+4. **Allows Ordering Beyond Available Stock**
+   - The API allows ordering more items than available stock.
+   - After placing such an order, the stock becomes negative.
+
+5. **Incorrect Status Code for Non-existent Orders**
+   - Requesting a non-existent order returns status `200 OK` instead of `404 Not Found`.
+
+---
+
+### 🧠 How Tests Detect These Bugs
+
+1. **Total Price Validation**
+   - The test calculates the expected total price using:
+     ```
+     expected = price × quantity
+     ```
+   - It then compares this value with `totalPrice` returned by the API.
+   - The test fails when the values do not match.
+
+2. **Invalid Quantity Testing**
+   - Test cases send requests with `quantity = 0` and negative values.
+   - The test verifies:
+     - The API should reject these inputs.
+     - If the order is created successfully, it is flagged as a bug.
+   - Additional checks confirm that stock should not increase after ordering.
+
+3. **Stock Consistency Check**
+   - The test retrieves stock from `/menu`.
+   - After operations, it compares expected stock behavior with actual results.
+   - Any inconsistency indicates incorrect system logic.
+
+4. **Out-of-Stock Validation**
+   - The test attempts to order more than the available stock.
+   - It verifies:
+     - The request should fail.
+     - Stock should never become negative.
+   - If the API allows the operation, the test fails.
+
+5. **Non-existent Order Validation**
+   - The test sends a request with an invalid `orderId`.
+   - It verifies that:
+     - The API should return `404`.
+     - If `200` is returned, it is marked as a bug.
+
+---
