@@ -1,0 +1,56 @@
+info:
+  name: Create Order (Valid)
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/orders"
+  body:
+    type: json
+    data: |-
+      {
+        "itemId": {{itemId}},
+        "quantity": {{quantity}}
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+runtime:
+  variables:
+    - name: itemId
+      value: "1"
+    - name: quantity
+      value: "1"
+  scripts:
+    - type: after-response
+      code: |-
+        const body = res.getBody();
+        const menu = JSON.parse(bru.getEnvVar("menu"));
+
+        const itemId = Number(bru.getRequestVar("itemId"));
+        const quantity = Number(bru.getRequestVar("quantity"));
+
+        const item = menu.find(i => i.id === itemId);
+
+        test("Status = 200", () => {
+          expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Total price must be correct", () => {
+          const expected = item.price * quantity;
+          expect(body.totalPrice).to.equal(expected);
+        });
+
+        test("OrderId exists", () => {
+          expect(body.orderId).to.not.be.undefined;
+        });
+
+        bru.setEnvVar("orderId", body.orderId);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

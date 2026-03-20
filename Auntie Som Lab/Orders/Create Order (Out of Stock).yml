@@ -1,0 +1,62 @@
+info:
+  name: Create Order (Out of Stock)
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/orders"
+  body:
+    type: json
+    data: |-
+      {
+        "itemId": {{itemId}},
+        "quantity": {{quantity}}
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+runtime:
+  variables:
+    - name: itemId
+      value: "1"
+    - name: quantity
+      value: "1"
+  scripts:
+    - type: before-request
+      code: |-
+        const menu = JSON.parse(bru.getEnvVar("menu"));
+
+        const itemId = Number(bru.getRequestVar("itemId"));
+        const quantity = Number(bru.getRequestVar("quantity"));
+
+        const item = menu.find(i => i.id === itemId);
+
+        test("Item must exist before ordering", () => {
+          expect(item).to.not.be.undefined;
+        });
+
+        test("Item should be out of stock or insufficient", () => {
+          console.log("Stock:", item ? item.stock : "not found");
+          console.log("Quantity:", quantity);
+          expect(item.stock < quantity || item.stock === 0).to.equal(true);
+        });
+    - type: after-response
+      code: |-
+        const body = res.getBody();
+
+        test("Status = 400", () => {
+          expect(res.getStatus()).to.equal(400);
+        });
+
+        test("Should return Out of stock error message", () => {
+          expect(body).to.not.be.null;
+          expect(body.error).to.equal("Out of stock");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,44 @@
+info:
+  name: Create Order (Invalid Item)
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/orders"
+  body:
+    type: json
+    data: |-
+      {
+        "itemId": {{itemId}},
+        "quantity": {{quantity}}
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+runtime:
+  variables:
+    - name: itemId
+      value: "999"
+    - name: quantity
+      value: "-10"
+  scripts:
+    - type: after-response
+      code: |-
+        const body = res.getBody();
+
+        test("Status = 404", () => {
+          expect(res.getStatus()).to.equal(404);
+        });
+
+        test("Should return Out of stock error message", () => {
+          expect(body).to.not.be.null;
+          expect(body.error).to.equal("Item not found");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

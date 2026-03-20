@@ -1,0 +1,37 @@
+info:
+  name: Get Menu
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/menu"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const body = res.getBody();
+
+        test("Status should be 200", () => {
+          expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Menu should be array", () => {
+          expect(body).to.be.an("array");
+        });
+
+        test("Stock should not be negative", () => {
+          body.forEach( item => {
+            expect(item.stock).to.be.at.least(0);
+          });
+        });
+
+        bru.setEnvVar("menu", JSON.stringify(body));
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

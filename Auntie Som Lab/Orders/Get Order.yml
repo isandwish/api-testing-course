@@ -1,0 +1,35 @@
+info:
+  name: Get Order
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/orders/{{orderId}}"
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const body = res.getBody();
+
+        test("Status should be 200", () => {
+          expect(res.getStatus()).to.equal(200);
+        });
+
+        test("OrderId should match", () => {
+          expect(body.orderId).to.equal(bru.getEnvVar("orderId"));
+        });
+
+        test("Order status should be created", () => {
+          expect(body.status).to.equal("created");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
