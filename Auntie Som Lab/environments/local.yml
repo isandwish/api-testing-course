@@ -1,4 +1,4 @@
-name: SW Testing
+name: local
 variables:
   - name: baseUrl
     value: http://localhost:5000
